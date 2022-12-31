@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const { randomABC } = require("../ran.js");
 
 var today = new Date();
 var day =
@@ -14,6 +14,8 @@ var day =
   today.getMinutes() +
   ":" +
   today.getSeconds();
+
+var a = today.getSeconds() + today.getMinutes();
 const DOCSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,

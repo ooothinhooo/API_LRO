@@ -16,4 +16,5 @@ apiProtected.post("/deletedoc", Doc.RemoveDoc);
 apiProtected.get("/getdoc", Doc.DocsList);
 apiProtected.post("/likedoc", Doc.LikeOneDoc);
 apiProtected.post("/viewdoc", Doc.CountViewDoc);
+apiProtected.get("/doclist", Doc.DocsListPagination);
 module.exports = apiProtected;

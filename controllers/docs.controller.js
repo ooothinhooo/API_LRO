@@ -150,6 +150,24 @@ exports.GetAllDocList = async (req, res) => {
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
+
+//* Get All HIGHLIGHTS ARTICLE
+//! hiện thị tất cả HIGHLIGHTS ARTICLE không cần auth
+exports.GetAllDOC_Highlight_Article = async (req, res) => {
+  try {
+    var SIZE = req.query.s
+    const doc = await Docs.find();
+    const arr = doc.sort(function(a,b){
+      if(a.view > b.view ) return -1
+      return 1
+    });
+    const data = arr.slice(0,SIZE)
+    res.status(200).send({ data: data });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
 //* Find one Doc
 //! trả về kết quả 1 doc thông qua _id của doc không cần auth
 exports.FindOneDoc = async (req, res) => {
@@ -194,3 +212,40 @@ exports.PaginationDoc = async (req, res) => {
     );
   }
 };
+
+//* Get doc list pagination
+//! Trả về kết quả theo page do user đăng tải
+exports.DocsListPagination = async (req,res)=>{
+  const PAGE_SIZE = 10;
+  try {
+    var page = req.query.page;
+    page = parseInt(page);
+    if (page) {
+      if (page < 1) page = 1;
+      var skip = (page - 1) * PAGE_SIZE;
+      const infoCreators =  await User.findById(req.userId)
+      .select("-password")
+      .select("-form")
+      .select("-uid")
+      .select("-posts")
+      .select("-blog")
+      .exec();
+      const count =  infoCreators.docs.length;
+      const id =  infoCreators._id;
+      const docsList = await Docs.find({userId:id})
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        res.json(jsonGenerate(StatusCode.SUCCESS, `Docs List for UserId ${id}`, { id,count, infoCreators,result:docsList}));
+
+      
+    } else {
+      return res.json(
+        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
+      );
+    }
+  } catch (error) {
+    return res.json(
+      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+    );
+  }
+}

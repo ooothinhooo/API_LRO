@@ -38,4 +38,7 @@ docRoutes.post("/findonepost", P.FindOnePost);
 docRoutes.get("/pagedoc", D.PaginationDoc);
 docRoutes.get("/pagepost", P.PaginationPost);
 
+
+docRoutes.get("/dochight", D.GetAllDOC_Highlight_Article);
+docRoutes.get("/posthight", P.GetAllPOST_Highlight_Article);
 module.exports = docRoutes;

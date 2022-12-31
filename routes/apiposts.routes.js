@@ -16,5 +16,6 @@ apiPost.post("/updatepost", Post.UpdatePost);
 apiPost.get("/getpost", Post.PostsList);
 apiPost.post("/likepost", Post.LikeOnePost);
 apiPost.post("/viewpost", Post.CountViewPost);
+apiPost.get("/postlist", Post.PostsListPagination);
 
 module.exports = apiPost;

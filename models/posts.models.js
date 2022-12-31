@@ -42,7 +42,6 @@ const POSTchema = new mongoose.Schema({
   },
   view: {
     type: Number,
-    default: 0,
   },
   creater: {
     type: String,
