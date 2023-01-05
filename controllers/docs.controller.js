@@ -15,12 +15,12 @@ exports.CreateDoc = async (req, res) => {
       userId: req.userId,
       title: req.body.title,
       tag: req.body.tag,
-      nameTag: req.body.nameTag,
-      dataURL: req.body.dataURL,
-      creater: req.body.creater,
-      createrId: req.body.createrId,
-      createrPhoto: req.body.createrPhoto,
+      desc: req.body.desc,
+      creatorsName: req.body.creatorsName,
+      creatorsId: req.body.creatorsId,
+      creatorsPhoto: req.body.creatorsPhoto,
       isPrivate: req.body.isPrivate,
+      view: req.body.view,
     });
 
     if (result) {
@@ -67,6 +67,25 @@ exports.RemoveDoc = async (req, res) => {
     );
   }
 };
+//* isPrivate post
+exports.isPrivateDoc = async (req, res) => {
+  try {
+    const { docs_id } = req.body;
+    try {
+      const list = await Docs.findById(docs_id);
+      if (list.isPrivate == true) {
+        await list.updateOne({ isPrivate: false });
+        return res.json(jsonGenerate(StatusCode.SUCCESS, "Like Succssfully"));
+      } else {
+        await list.updateOne({ isPrivate: true });
+        return res.json(jsonGenerate(StatusCode.SUCCESS, "UnLike Succssfully"));
+      }
+    } catch (error) {
+      return res.status(500).json("Internal server error ");
+    }
+  } catch (error) {}
+};
+
 //* Like Doc
 exports.LikeOneDoc = async (req, res) => {
   try {
@@ -213,6 +232,8 @@ exports.PaginationDoc = async (req, res) => {
   }
 };
 
+
+
 //* Get doc list pagination
 //! Trả về kết quả theo page do user đăng tải
 exports.DocsListPagination = async (req,res)=>{
@@ -224,6 +245,46 @@ exports.DocsListPagination = async (req,res)=>{
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
       const infoCreators =  await User.findById(req.userId)
+      .select("-password")
+      .select("-form")
+      .select("-uid")
+      .select("-posts")
+      .select("-blog")
+      .exec();
+      const count =  infoCreators.docs.length;
+      const id =  infoCreators._id;
+      const docsList = await Docs.find({userId:id})
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        res.json(jsonGenerate(StatusCode.SUCCESS, `Docs List for UserId ${id}`, { id,count, infoCreators,result:docsList}));
+
+      
+    } else {
+      return res.json(
+        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
+      );
+    }
+  } catch (error) {
+    return res.json(
+      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+    );
+  }
+}
+
+
+
+//* Get doc list pagination
+//! Trả về kết quả theo page do user đăng tải
+exports.ViewDocsList = async (req,res)=>{
+  const PAGE_SIZE = 10;
+  try {
+    var page = req.query.page;
+    var uid = req.query.uid;
+    page = parseInt(page);
+    if (page) {
+      if (page < 1) page = 1;
+      var skip = (page - 1) * PAGE_SIZE;
+      const infoCreators =  await User.findById({_id:uid})
       .select("-password")
       .select("-form")
       .select("-uid")

@@ -3,19 +3,9 @@ const { randomABC } = require("../ran.js");
 
 var today = new Date();
 var day =
-  today.getDate() +
-  "/" +
-  (today.getMonth() + 1) +
-  "/" +
-  today.getFullYear() +
-  " " +
-  today.getHours() +
-  ":" +
-  today.getMinutes() +
-  ":" +
-  today.getSeconds();
-
-var a = today.getSeconds() + today.getMinutes();
+  today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
+var time =
+  today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 const DOCSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -47,18 +37,25 @@ const DOCSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  creater: {
+  creatorsName: {
     type: String,
+    required: true,
   },
-  createrId: {
+  creatorsId: {
     type: String,
+    required: true,
   },
-  createrPhoto: {
+  creatorsPhoto: {
     type: String,
+    required: true,
   },
   date: {
     type: String,
     default: day,
+  },
+  time: {
+    type: String,
+    default: time,
   },
 });
 

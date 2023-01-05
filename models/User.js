@@ -44,7 +44,7 @@ const userSchema = mongoose.Schema({
   blog: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "BLOGS",
+      ref: "blogs",
     },
   ],
   date: {

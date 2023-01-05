@@ -2,16 +2,18 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
-const Posts = require("../models/posts.models.js");
+const Blogs = require("../models/blogs.models.js");
 const { StatusCode } = require("../utils/constants.js");
 const { jsonGenerate } = require("../utils/helpers.js");
 
 //* Create Post
-exports.CreatePost = async (req, res) => {
+exports.CreateBlog = async (req, res) => {
   const JWT_TOKEN_SECRET = process.env.JWT_TOKEN_SECRET;
 
   try {
-    const result = await Posts.create({
+    const { view } = req.body;
+    if (view == "") view = 0;
+    const result = await Blogs.create({
       userId: req.userId,
       title: req.body.title,
       tag: req.body.tag,
@@ -20,18 +22,23 @@ exports.CreatePost = async (req, res) => {
       creatorsId: req.body.creatorsId,
       creatorsPhoto: req.body.creatorsPhoto,
       isPrivate: req.body.isPrivate,
-      view: req.body.view,
+      view: view,
     });
 
     if (result) {
       const user = await User.findOneAndUpdate(
         { _id: req.userId },
         {
-          $push: { posts: result },
+          $push: { blog: result },
         }
       );
+
+      // const check = user.blog.includes(result._id);
       return res.json(
-        jsonGenerate(StatusCode.SUCCESS, "Posts created Succssfully", result)
+        jsonGenerate(StatusCode.SUCCESS, "Posts created Succssfully", {
+          user,
+          result,
+        })
       );
     }
   } catch (error) {
@@ -46,10 +53,10 @@ exports.CreatePost = async (req, res) => {
 };
 
 //* update post
-exports.UpdatePost = async (req, res) => {
-  const newPost = ({ post_id, title, desc, tag, nameTag } = req.body);
+exports.UpdateBlog = async (req, res) => {
+  const newPost = ({ blog_id, title, desc, tag } = req.body);
   try {
-    const result = await Posts.findByIdAndUpdate(post_id, newPost);
+    const result = await Blogs.findByIdAndUpdate(post_id, newPost);
     return res.json(
       jsonGenerate(StatusCode.SUCCESS, "Update Succssfully", newPost)
     );
@@ -58,21 +65,21 @@ exports.UpdatePost = async (req, res) => {
   }
 };
 //* Remove post
-exports.RemovePost = async (req, res) => {
+exports.RemoveBlog = async (req, res) => {
   try {
-    const result = await Posts.findOneAndDelete({
+    const result = await Blogs.findOneAndDelete({
       userId: req.userId,
-      _id: req.body.post_id,
+      _id: req.body.blog_id,
     });
 
     if (result) {
       const user = await User.findOneAndUpdate(
         { _id: req.userId },
-        { $pull: { docs: req.body.post_id } }
+        { $pull: { docs: req.body.blog_id } }
       );
 
       return res.json(
-        jsonGenerate(StatusCode.SUCCESS, "Post deleted Successfully", null)
+        jsonGenerate(StatusCode.SUCCESS, "Blog deleted Successfully", null)
       );
     }
   } catch (error) {
@@ -81,13 +88,39 @@ exports.RemovePost = async (req, res) => {
     );
   }
 };
-//* like post
-exports.LikeOnePost = async (req, res) => {
+//* isPrivate post
+exports.isPrivateBlog = async (req, res) => {
   try {
-    const { post_id, photoURL } = req.body;
+    const { blog_id } = req.body;
     try {
-      const list = await Posts.findById(post_id);
+      const list = await Blogs.findById(blog_id);
+      if (list.isPrivate == true) {
+        await list.updateOne({ isPrivate: false });
+        return res.json(
+          jsonGenerate(StatusCode.SUCCESS, "isPrivate flase Succssfully")
+        );
+      } else {
+        await list.updateOne({ isPrivate: true });
+        return res.json(
+          jsonGenerate(StatusCode.SUCCESS, "isPrivate true Succssfully")
+        );
+      }
+    } catch (error) {
+      return res.status(500).json("Internal server error ");
+    }
+  } catch (error) {}
+};
+
+//* like post
+exports.LikeOneBlog = async (req, res) => {
+  try {
+    const { post_id: blog_id, photoURL } = req.body;
+    try {
+      const list = await Blogs.findById(blog_id);
       if (!list.like.includes(photoURL)) {
+        // if (post.dislike.includes(photoURL)) {
+        //   await post.updateOne({ $pull: { dislike: photoURL } });
+        // }
         await list.updateOne({ $push: { like: photoURL } });
 
         return res.json(jsonGenerate(StatusCode.SUCCESS, "Like Succssfully"));
@@ -100,34 +133,14 @@ exports.LikeOnePost = async (req, res) => {
     }
   } catch (error) {}
 };
-
-//* isPrivate post
-exports.isPrivatePost = async (req, res) => {
-  try {
-    const { post_id } = req.body;
-    try {
-      const list = await Posts.findById(post_id);
-      if (list.isPrivate == true) {
-        await list.updateOne({ isPrivate: false });
-        return res.json(jsonGenerate(StatusCode.SUCCESS, "Like Succssfully"));
-      } else {
-        await list.updateOne({ isPrivate: true });
-        return res.json(jsonGenerate(StatusCode.SUCCESS, "UnLike Succssfully"));
-      }
-    } catch (error) {
-      return res.status(500).json("Internal server error ");
-    }
-  } catch (error) {}
-};
-
 //* count view post
-exports.CountViewPost = async (req, res) => {
+exports.CountViewBlog = async (req, res) => {
   try {
-    const { post_id } = req.body;
-    const post = await Posts.findById(post_id);
-    const updatedPost = await Posts.findByIdAndUpdate(
-      { _id: post_id },
-      { view: post.view + 1 },
+    const { blog_id } = req.body;
+    const blog = await Blogs.findById(blog_id);
+    const updatedPost = await Blogs.findByIdAndUpdate(
+      { _id: blog_id },
+      { view: blogs.view + 1 },
       { new: true }
     );
     return res.json(jsonGenerate(StatusCode.SUCCESS, "View Succssfully"));
@@ -136,7 +149,7 @@ exports.CountViewPost = async (req, res) => {
   }
 };
 //* post list => trả vể danh sách theo user đã tải lên
-exports.PostsList = async (req, res) => {
+exports.BlogsList = async (req, res) => {
   try {
     const list = await User.findById(req.userId)
       .select("-password")
@@ -151,20 +164,20 @@ exports.PostsList = async (req, res) => {
   }
 };
 //* Get all post
-exports.GetAllPostList = async (req, res) => {
+exports.GetAllBlogList = async (req, res) => {
   try {
-    const post = await Posts.find();
+    const post = await Blogs.find();
     res.status(200).send({ data: post });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
 //* find one post
-exports.FindOnePost = async (req, res) => {
+exports.FindOneBlog = async (req, res) => {
   try {
-    const { post_id } = req.body;
-    const list = await Posts.findById({
-      _id: post_id,
+    const { post_id: blog_id } = req.body;
+    const list = await Blogs.findById({
+      _id: blog_id,
     });
 
     return res.json(jsonGenerate(StatusCode.SUCCESS, "All Posts List", list));
@@ -175,7 +188,7 @@ exports.FindOnePost = async (req, res) => {
   }
 };
 //* Pagination post => phân trang
-exports.PaginationPost = async (req, res) => {
+exports.PaginationBlog = async (req, res) => {
   const PAGE_SIZE = 10;
   try {
     var page = req.query.page;
@@ -183,7 +196,7 @@ exports.PaginationPost = async (req, res) => {
       page = parseInt(page);
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      Posts.find({})
+      Blogs.find({})
         .skip(skip)
         .limit(PAGE_SIZE)
         .then((data) => {
@@ -203,25 +216,24 @@ exports.PaginationPost = async (req, res) => {
 
 //* Get All HIGHLIGHTS ARTICLE
 //! hiện thị tất cả HIGHLIGHTS ARTICLE không cần auth
-exports.GetAllPOST_Highlight_Article = async (req, res) => {
+exports.GetAllBLOG_Highlight_Article = async (req, res) => {
   try {
-    var SIZE = req.query.s
-    const doc = await Posts.find();
-    const arr = doc.sort(function(a,b){
-      if(a.view > b.view ) return -1
-      return 1
+    var SIZE = req.query.s;
+    const doc = await Blogs.find();
+    const arr = doc.sort(function (a, b) {
+      if (a.view > b.view) return -1;
+      return 1;
     });
-    const data = arr.slice(0,SIZE)
+    const data = arr.slice(0, SIZE);
     res.status(200).send({ data: data });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
 
-
 //* Get post list pagination
 //! Trả về kết quả theo page do user đăng tải
-exports.PostsListPagination = async (req,res)=>{
+exports.BlogsListPagination = async (req, res) => {
   const PAGE_SIZE = 10;
   try {
     var page = req.query.page;
@@ -229,22 +241,26 @@ exports.PostsListPagination = async (req,res)=>{
     if (page) {
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      const infoCreators =  await User.findById(req.userId)
-      .select("-password")
-      .select("-form")
-      .select("-uid")
-      .select("-docs")
-      .select("-blog")
-      .exec();
-      const count =  infoCreators.posts.length;
-      const id =  infoCreators._id;
-      const docsList = await Posts.find({userId:id})
+      const infoCreators = await User.findById(req.userId)
+        .select("-password")
+        .select("-form")
+        .select("-uid")
+        .select("-docs")
+        .select("-posts")
+        .exec();
+      const count = infoCreators.blog.length;
+      const id = infoCreators._id;
+      const docsList = await Blogs.find({ userId: id })
         .skip(skip)
-        .limit(PAGE_SIZE)
-        
-        res.json(jsonGenerate(StatusCode.SUCCESS, `Posts List for UserId ${id}`, {count, infoCreators,result:docsList}));
+        .limit(PAGE_SIZE);
 
-      
+      res.json(
+        jsonGenerate(StatusCode.SUCCESS, `Blogs List for UserId ${id}`, {
+          count,
+          infoCreators,
+          result: docsList,
+        })
+      );
     } else {
       return res.json(
         jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
@@ -255,4 +271,4 @@ exports.PostsListPagination = async (req,res)=>{
       jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
     );
   }
-}
+};

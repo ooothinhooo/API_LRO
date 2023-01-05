@@ -6,9 +6,10 @@ const connection = require("./db");
 
 const AuthMiddleware = require("./middlewares/AuthMidleware.js");
 const apiRoute = require("./routes/api.js");
-const docsRoutes = require("./routes/apidocs.routes.js");
 const getRoutes = require("./routes/get.routes.js");
+const docsRoutes = require("./routes/apidocs.routes.js");
 const postsRoutes = require("./routes/apiposts.routes.js");
+const blogsRoutes = require("./routes/apiBlogs.routes.js");
 
 // Database Connection
 connection();
@@ -27,7 +28,8 @@ app.use("/get/", getRoutes);
 app.use("/post/", AuthMiddleware, postsRoutes);
 //router handler for docs model
 app.use("/docs/", AuthMiddleware, docsRoutes);
-
+//
+app.use("/blogs/", AuthMiddleware, blogsRoutes);
 //Server runing
 const PORT = process.env.PORT;
 app.get("/", (req, res) => {
