@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema({
   form: { type: String },
-  uid: { type: String },
+  first_name: { type: String },
+  last_name: { type: String },
   username: {
     type: String,
     min: 6,
@@ -22,26 +23,30 @@ const userSchema = mongoose.Schema({
     // max: 32,
     required: true,
   },
-  photoURL: {
+  phone: {
+    type: String,
+  },
+  avatar: {
     type: String,
   },
   access: {
     type: String,
     default: "user",
   },
+  isSex: { type: String },
   docs: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "docs",
     },
   ],
-  posts: [
+  articles: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "posts",
     },
   ],
-  blog: [
+  disscussion: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "blogs",

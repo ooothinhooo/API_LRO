@@ -2,6 +2,9 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
+const Art = require("../models/articles.models.js");
+const Doc = require("../models/docs.models.js");
+const Dis = require("../models/disscussion.models.js");
 const { StatusCode } = require("../utils/constants.js");
 const { jsonGenerate } = require("../utils/helpers.js");
 
@@ -11,8 +14,17 @@ exports.Login = async (req, res) => {
   const errors = validationResult(req);
 
   if (errors.isEmpty()) {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username: username });
+    const { username, password, email } = req.body;
+    const user = await User.findOne({
+      $or: [
+        {
+          email: email,
+        },
+        {
+          username: username,
+        },
+      ],
+    });
 
     if (!user) {
       return res.json(
@@ -42,9 +54,11 @@ exports.Login = async (req, res) => {
         uid: user.uid,
         username: username,
         email: user.email,
-        photoURL: user.photoURL,
+        avatar: user.avatar,
         access: user.access,
         token: token,
+        first_name: user.first_name,
+        last_name: user.last_name,
       })
     );
   }
@@ -62,7 +76,17 @@ exports.Register = async (req, res) => {
   const JWT_TOKEN_SECRET = process.env.JWT_TOKEN_SECRET;
   const errors = validationResult(req);
   if (errors.isEmpty()) {
-    const { uid, form, username, email, password, photoURL } = req.body;
+    const {
+      form,
+      first_name,
+      last_name,
+      username,
+      email,
+      password,
+      avatar,
+      isSex,
+      phone,
+    } = req.body;
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
     const userExist = await User.findOne({
@@ -88,12 +112,15 @@ exports.Register = async (req, res) => {
     //! save to db
     try {
       const result = await User.create({
-        uid: uid,
         form: form,
         username: username,
         email: email,
         password: hashPassword,
-        photoURL: photoURL,
+        avatar: avatar,
+        first_name: first_name,
+        last_name: last_name,
+        isSex: isSex,
+        phone: phone,
       });
 
       const token = Jwt.sign({ userId: result._id }, JWT_TOKEN_SECRET);
@@ -118,7 +145,6 @@ exports.Register = async (req, res) => {
   }
 };
 
-
 exports.FindOneUser = async (req, res) => {
   try {
     var uid = req.query.uid;
@@ -139,5 +165,101 @@ exports.FindOneUser = async (req, res) => {
   }
 };
 
+exports.UpdatePersonalInformation = async (req, res) => {
+  const _id = req.userId;
+  const { first_name, last_name, email, phone, avatar, isSex } = req.body;
+  const data = { first_name, last_name, email, phone, avatar, isSex };
+  const userExist = await User.findOne({
+    $or: [
+      {
+        email: email,
+      },
+    ],
+  });
 
+  //!User or Email already exists
+  if (userExist) {
+    return res.json(
+      jsonGenerate(
+        StatusCode.UNPROCESSABLE_ENTITY,
+        "User or Email already exists"
+      )
+    );
+  }
+  try {
+    const result = await User.findByIdAndUpdate(_id, data);
+    return res.json(
+      jsonGenerate(
+        StatusCode.SUCCESS,
+        "Update Personal Information Successfully",
+        result
+      )
+    );
+  } catch (error) {
+    return res.status(500).json("Internal server error ");
+  }
+};
 
+exports.ChangeThePassword = async (req, res) => {
+  // const newpass = ({ password } = req.body);
+  const _id = req.userId;
+
+  const salt = await bcrypt.genSalt(10);
+  const password = await bcrypt.hash(req.body.password, salt);
+  const NewPass = { password };
+  try {
+    const result = await User.findByIdAndUpdate(_id, NewPass);
+    return res.json(
+      jsonGenerate(StatusCode.SUCCESS, "Update Succssfully", result)
+    );
+  } catch (error) {
+    return res.status(500).json("Internal server error ");
+  }
+};
+
+exports.SearchData = async (req, res) => {
+  const PAGE_SIZE = 10;
+  const skip = 1;
+  try {
+    const { data } = req.body;
+    const list1 = await Doc.find({
+      $or: [
+        {
+          title: data,
+        },
+        {
+          tag: data,
+        },
+      ],
+    }).limit(PAGE_SIZE);
+    const list2 = await Art.find({
+      $or: [
+        {
+          title: data,
+        },
+        {
+          tag: data,
+        },
+      ],
+    }).limit(PAGE_SIZE);
+    const list3 = await Dis.find({
+      $or: [
+        {
+          title: data,
+        },
+        {
+          tag: data,
+        },
+      ],
+    }).limit(PAGE_SIZE);
+
+    const result = list1.concat(list2, list3);
+    return res.json(
+      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", result)
+    );
+  } catch (error) {
+    return res.json(
+      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+    );
+  }
+};

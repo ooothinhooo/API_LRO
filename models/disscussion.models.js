@@ -5,12 +5,14 @@ var day =
   today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
 var time =
   today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-const POSTchema = new mongoose.Schema({
+
+const DISCUSSIONchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
+
   title: {
     type: String,
     required: true,
@@ -19,15 +21,11 @@ const POSTchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  nameTag: {
-    type: String,
-    required: true,
-  },
   tag: {
-    type: String,
+    type: Array,
     required: true,
   },
-
+  thumbnail: { type: String },
   isPrivate: { type: Boolean, required: true },
   like: {
     type: Array,
@@ -57,5 +55,5 @@ const POSTchema = new mongoose.Schema({
   },
 });
 
-const Posts = mongoose.model("posts", POSTchema);
-module.exports = Posts;
+const Disscussion = mongoose.model("Disscussion", DISCUSSIONchema);
+module.exports = Disscussion;

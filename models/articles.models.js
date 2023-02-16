@@ -5,19 +5,17 @@ var day =
   today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
 var time =
   today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-
-const BLOGSchema = new mongoose.Schema({
+const articleschema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-
   title: {
     type: String,
     required: true,
   },
-  desc: {
+  content: {
     type: String,
     required: true,
   },
@@ -25,13 +23,13 @@ const BLOGSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
-  thumbnail: { type: String },
   isPrivate: { type: Boolean, required: true },
   like: {
     type: Array,
   },
   view: {
     type: Number,
+    default: 0,
   },
   creatorsName: {
     type: String,
@@ -55,5 +53,5 @@ const BLOGSchema = new mongoose.Schema({
   },
 });
 
-const Blogs = mongoose.model("Blogs", BLOGSchema);
-module.exports = Blogs;
+const Articles = mongoose.model("articles", articleschema);
+module.exports = Articles;

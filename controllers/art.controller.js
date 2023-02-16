@@ -2,32 +2,31 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
-const Posts = require("../models/posts.models.js");
+const Article = require("../models/articles.models.js");
 const { StatusCode } = require("../utils/constants.js");
 const { jsonGenerate } = require("../utils/helpers.js");
 
 //* Create Post
-exports.CreatePost = async (req, res) => {
+exports.CreateArt = async (req, res) => {
   const JWT_TOKEN_SECRET = process.env.JWT_TOKEN_SECRET;
 
   try {
-    const result = await Posts.create({
+    const result = await Article.create({
       userId: req.userId,
       title: req.body.title,
       tag: req.body.tag,
-      desc: req.body.desc,
+      content: req.body.content,
       creatorsName: req.body.creatorsName,
       creatorsId: req.body.creatorsId,
       creatorsPhoto: req.body.creatorsPhoto,
       isPrivate: req.body.isPrivate,
-      view: req.body.view,
     });
 
     if (result) {
       const user = await User.findOneAndUpdate(
         { _id: req.userId },
         {
-          $push: { posts: result },
+          $push: { articles: result },
         }
       );
       return res.json(
@@ -46,10 +45,10 @@ exports.CreatePost = async (req, res) => {
 };
 
 //* update post
-exports.UpdatePost = async (req, res) => {
-  const newPost = ({ post_id, title, desc, tag, nameTag } = req.body);
+exports.UpdateArt = async (req, res) => {
+  const newPost = ({ _id, title, content, tag, isPrivate } = req.body);
   try {
-    const result = await Posts.findByIdAndUpdate(post_id, newPost);
+    const result = await Article.findByIdAndUpdate(_id, newPost);
     return res.json(
       jsonGenerate(StatusCode.SUCCESS, "Update Succssfully", newPost)
     );
@@ -58,17 +57,17 @@ exports.UpdatePost = async (req, res) => {
   }
 };
 //* Remove post
-exports.RemovePost = async (req, res) => {
+exports.RemoveArt = async (req, res) => {
   try {
-    const result = await Posts.findOneAndDelete({
+    const result = await Article.findOneAndDelete({
       userId: req.userId,
-      _id: req.body.post_id,
+      _id: req.body._id,
     });
 
     if (result) {
       const user = await User.findOneAndUpdate(
         { _id: req.userId },
-        { $pull: { docs: req.body.post_id } }
+        { $pull: { docs: req.body._id } }
       );
 
       return res.json(
@@ -82,11 +81,11 @@ exports.RemovePost = async (req, res) => {
   }
 };
 //* like post
-exports.LikeOnePost = async (req, res) => {
+exports.InteractArt = async (req, res) => {
   try {
-    const { post_id, photoURL } = req.body;
+    const { _id, photoURL } = req.body;
     try {
-      const list = await Posts.findById(post_id);
+      const list = await Article.findById(_id);
       if (!list.like.includes(photoURL)) {
         await list.updateOne({ $push: { like: photoURL } });
 
@@ -102,11 +101,11 @@ exports.LikeOnePost = async (req, res) => {
 };
 
 //* isPrivate post
-exports.isPrivatePost = async (req, res) => {
+exports.SetIsPrivateArt = async (req, res) => {
   try {
-    const { post_id } = req.body;
+    const { _id } = req.body;
     try {
-      const list = await Posts.findById(post_id);
+      const list = await Article.findById(_id);
       if (list.isPrivate == true) {
         await list.updateOne({ isPrivate: false });
         return res.json(jsonGenerate(StatusCode.SUCCESS, "Like Succssfully"));
@@ -121,13 +120,13 @@ exports.isPrivatePost = async (req, res) => {
 };
 
 //* count view post
-exports.CountViewPost = async (req, res) => {
+exports.CountViewArt = async (req, res) => {
   try {
-    const { post_id } = req.body;
-    const post = await Posts.findById(post_id);
-    const updatedPost = await Posts.findByIdAndUpdate(
-      { _id: post_id },
-      { view: post.view + 1 },
+    const { _id } = req.body;
+    const art = await Article.findById(_id);
+    const updatedPost = await Article.findByIdAndUpdate(
+      { _id: _id },
+      { view: art.view + 1 },
       { new: true }
     );
     return res.json(jsonGenerate(StatusCode.SUCCESS, "View Succssfully"));
@@ -135,36 +134,13 @@ exports.CountViewPost = async (req, res) => {
     return res.status(500).json("Internal server error ");
   }
 };
-//* post list => trả vể danh sách theo user đã tải lên
-exports.PostsList = async (req, res) => {
-  try {
-    const list = await User.findById(req.userId)
-      .select("-password")
-      .populate("posts")
-      .exec();
 
-    return res.json(jsonGenerate(StatusCode.SUCCESS, "All todo list", list));
-  } catch (error) {
-    return res.json(
-      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
-    );
-  }
-};
-//* Get all post
-exports.GetAllPostList = async (req, res) => {
-  try {
-    const post = await Posts.find();
-    res.status(200).send({ data: post });
-  } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" });
-  }
-};
 //* find one post
-exports.FindOnePost = async (req, res) => {
+exports.FindOneArt = async (req, res) => {
   try {
-    const { post_id } = req.body;
-    const list = await Posts.findById({
-      _id: post_id,
+    const { _id } = req.body;
+    const list = await Article.findById({
+      _id: _id,
     });
 
     return res.json(jsonGenerate(StatusCode.SUCCESS, "All Posts List", list));
@@ -175,7 +151,7 @@ exports.FindOnePost = async (req, res) => {
   }
 };
 //* Pagination post => phân trang
-exports.PaginationPost = async (req, res) => {
+exports.PaginationArt = async (req, res) => {
   const PAGE_SIZE = 10;
   try {
     var page = req.query.page;
@@ -183,7 +159,7 @@ exports.PaginationPost = async (req, res) => {
       page = parseInt(page);
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      Posts.find({})
+      Article.find({})
         .skip(skip)
         .limit(PAGE_SIZE)
         .then((data) => {
@@ -203,25 +179,24 @@ exports.PaginationPost = async (req, res) => {
 
 //* Get All HIGHLIGHTS ARTICLE
 //! hiện thị tất cả HIGHLIGHTS ARTICLE không cần auth
-exports.GetAllPOST_Highlight_Article = async (req, res) => {
+exports.HighLightArt = async (req, res) => {
   try {
-    var SIZE = req.query.s
-    const doc = await Posts.find();
-    const arr = doc.sort(function(a,b){
-      if(a.view > b.view ) return -1
-      return 1
+    var SIZE = req.query.s;
+    const doc = await Article.find();
+    const arr = doc.sort(function (a, b) {
+      if (a.view > b.view) return -1;
+      return 1;
     });
-    const data = arr.slice(0,SIZE)
+    const data = arr.slice(0, SIZE);
     res.status(200).send({ data: data });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
 
-
 //* Get post list pagination
 //! Trả về kết quả theo page do user đăng tải
-exports.PostsListPagination = async (req,res)=>{
+exports.ArtListForUserId = async (req, res) => {
   const PAGE_SIZE = 10;
   try {
     var page = req.query.page;
@@ -229,22 +204,22 @@ exports.PostsListPagination = async (req,res)=>{
     if (page) {
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      const infoCreators =  await User.findById(req.userId)
-      .select("-password")
-      .select("-form")
-      .select("-uid")
-      .select("-docs")
-      .select("-blog")
-      .exec();
-      const count =  infoCreators.posts.length;
-      const id =  infoCreators._id;
-      const docsList = await Posts.find({userId:id})
+      const infoCreators = await User.findById(req.userId)
+        .select("-password")
+        .exec();
+      const count = infoCreators.articles.length;
+      const id = infoCreators._id;
+      const ArtList = await Article.find({ userId: id })
         .skip(skip)
-        .limit(PAGE_SIZE)
-        
-        res.json(jsonGenerate(StatusCode.SUCCESS, `Posts List for UserId ${id}`, {count, infoCreators,result:docsList}));
+        .limit(PAGE_SIZE);
 
-      
+      res.json(
+        jsonGenerate(StatusCode.SUCCESS, `Articles List for UserId ${id}`, {
+          count,
+          infoCreators,
+          result: ArtList,
+        })
+      );
     } else {
       return res.json(
         jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
@@ -255,4 +230,4 @@ exports.PostsListPagination = async (req,res)=>{
       jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
     );
   }
-}
+};

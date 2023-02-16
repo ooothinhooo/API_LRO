@@ -2,7 +2,7 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
-const Blogs = require("../models/blogs.models.js");
+const Blogs = require("../models/disscussion.models.js");
 const { StatusCode } = require("../utils/constants.js");
 const { jsonGenerate } = require("../utils/helpers.js");
 
@@ -175,7 +175,7 @@ exports.GetAllBlogList = async (req, res) => {
 //* find one post
 exports.FindOneBlog = async (req, res) => {
   try {
-    const { post_id: blog_id } = req.body;
+    const { blog_id } = req.body;
     const list = await Blogs.findById({
       _id: blog_id,
     });

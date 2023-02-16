@@ -16,19 +16,22 @@ const DOCSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  dataURL: {
+  content: {
+    type: String,
+    // required: true,
+  },
+  docs_URL: {
     type: String,
     required: true,
   },
-  nameTag: {
+  category: {
     type: String,
     required: true,
   },
   tag: {
-    type: String,
+    type: Array,
     required: true,
   },
-
   isPrivate: { type: Boolean, required: true },
   like: {
     type: Array,
@@ -61,3 +64,6 @@ const DOCSchema = new mongoose.Schema({
 
 const Docs = mongoose.model("docs", DOCSchema);
 module.exports = Docs;
+
+
+      
