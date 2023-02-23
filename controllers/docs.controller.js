@@ -164,10 +164,8 @@ exports.HighLightDoc = async (req, res) => {
 //! trả về kết quả 1 doc thông qua _id của doc không cần auth
 exports.FindOneDoc = async (req, res) => {
   try {
-    const { docs_id } = req.body;
-    const list = await Docs.findById({
-      _id: docs_id,
-    });
+    // const { doc_id } = req.body;
+    const list = await Docs.findById({ _id: req.body._id });
 
     return res.json(jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", list));
   } catch (error) {

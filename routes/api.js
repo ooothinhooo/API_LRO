@@ -12,15 +12,14 @@ const apiRoute = express.Router();
 apiRoute.post("/register", RegisterSchema, auth.Register);
 apiRoute.post("/login", LoginSchema, auth.Login);
 
-apiRoute.get("/findonedoc", D.FindOneDoc);
+apiRoute.post("/findonedoc", D.FindOneDoc);
 apiRoute.get("/pagedocs", D.PaginationDoc);
 apiRoute.get("/docshight", D.HighLightDoc);
 
-apiRoute.get("/findoneart", A.FindOneArt);
+apiRoute.post("/findoneart", A.FindOneArt);
 apiRoute.get("/pagearts", A.PaginationArt);
 apiRoute.get("/artshight", A.HighLightArt);
 
 apiRoute.post("/search", auth.SearchData);
-
+apiRoute.get("/user", auth.FindOneUser);
 module.exports = apiRoute;
-

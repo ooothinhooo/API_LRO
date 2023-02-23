@@ -138,10 +138,8 @@ exports.CountViewArt = async (req, res) => {
 //* find one post
 exports.FindOneArt = async (req, res) => {
   try {
-    const { _id } = req.body;
-    const list = await Article.findById({
-      _id: _id,
-    });
+    // const { _id } = req.body;
+    const list = await Article.findById({ _id: req.body._id });
 
     return res.json(jsonGenerate(StatusCode.SUCCESS, "All Posts List", list));
   } catch (error) {

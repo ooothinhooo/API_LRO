@@ -147,16 +147,14 @@ exports.Register = async (req, res) => {
 
 exports.FindOneUser = async (req, res) => {
   try {
-    var uid = req.query.uid;
-    const infoCreators = await User.findById({ _id: uid })
+    // var uid = req.query.uid;
+    const infoCreators = await User.findById({ _id: req.body._id })
       .select("-password")
-      .populate("posts")
       .populate("docs")
-      // .populate("blogs")
       .exec();
 
     return res.json(
-      jsonGenerate(StatusCode.SUCCESS, `User => ${uid}`, infoCreators)
+      jsonGenerate(StatusCode.SUCCESS, `User => ${req.body._id}`, infoCreators)
     );
   } catch (error) {
     return res.json(
