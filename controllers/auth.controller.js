@@ -2,7 +2,7 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
-const Art = require("../models/articles.models.js");
+const Art = require("../models/arts.models.js");
 const Doc = require("../models/docs.models.js");
 const Dis = require("../models/disscussion.models.js");
 const { StatusCode } = require("../utils/constants.js");
@@ -151,6 +151,7 @@ exports.FindOneUser = async (req, res) => {
     const infoCreators = await User.findById({ _id: req.body._id })
       .select("-password")
       .populate("docs")
+      .populate("articles")
       .exec();
 
     return res.json(

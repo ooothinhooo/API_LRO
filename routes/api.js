@@ -21,5 +21,5 @@ apiRoute.get("/pagearts", A.PaginationArt);
 apiRoute.get("/artshight", A.HighLightArt);
 
 apiRoute.post("/search", auth.SearchData);
-apiRoute.get("/user", auth.FindOneUser);
+apiRoute.post("/user", auth.FindOneUser);
 module.exports = apiRoute;

@@ -43,7 +43,7 @@ const userSchema = mongoose.Schema({
   articles: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "posts",
+      ref: "articles",
     },
   ],
   disscussion: [
