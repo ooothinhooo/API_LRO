@@ -218,6 +218,44 @@ exports.ChangeThePassword = async (req, res) => {
 
 exports.SearchData = async (req, res) => {
   const PAGE_SIZE = 10;
+const skip = 1;
+
+try {
+    const { data } = req.body;
+
+    const original = data;
+
+const filter = original.normalize('NFD').replace(/[\u0300-\u036f]/g, '');  // Chuỗi không dấu 
+const regExp = new RegExp(filter, 'i');
+    const list1 = await Doc.find({
+      $or: [
+        {
+            title: regExp
+        },
+        {
+            tag: regExp
+        }
+     ]
+    }).skip(skip).limit(PAGE_SIZE);
+    
+  
+
+    // const result = list1.concat(list2);
+    return res.json(
+        jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", list1)
+    );
+} catch (error) {
+    return res.json(
+        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+    );
+}
+
+};
+
+/*
+
+exports.SearchData = async (req, res) => {
+  const PAGE_SIZE = 10;
   const skip = 1;
   try {
     const { data } = req.body;
@@ -241,18 +279,8 @@ exports.SearchData = async (req, res) => {
         },
       ],
     }).limit(PAGE_SIZE);
-    const list3 = await Dis.find({
-      $or: [
-        {
-          title: data,
-        },
-        {
-          tag: data,
-        },
-      ],
-    }).limit(PAGE_SIZE);
 
-    const result = list1.concat(list2, list3);
+    const result = list1.concat(list2);
     return res.json(
       jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", result)
     );
@@ -262,3 +290,4 @@ exports.SearchData = async (req, res) => {
     );
   }
 };
+*/
