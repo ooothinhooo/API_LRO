@@ -166,12 +166,19 @@ exports.FindOneUser = async (req, res) => {
 
 exports.UpdatePersonalInformation = async (req, res) => {
   const _id = req.userId;
-  const { first_name, last_name, email, phone, avatar, isSex } = req.body;
-  const data = { first_name, last_name, email, phone, avatar, isSex };
+  const { first_name, last_name, username, email, phone, avatar, isSex } =
+    req.body;
+  const data = { first_name, last_name, username, email, phone, avatar, isSex };
   const userExist = await User.findOne({
     $or: [
       {
         email: email,
+      },
+      {
+        username: username,
+      },
+      {
+        phone: phone,
       },
     ],
   });
@@ -181,7 +188,7 @@ exports.UpdatePersonalInformation = async (req, res) => {
     return res.json(
       jsonGenerate(
         StatusCode.UNPROCESSABLE_ENTITY,
-        "User or Email already exists"
+        "UserName or Email or Phone already exists"
       )
     );
   }
@@ -217,39 +224,43 @@ exports.ChangeThePassword = async (req, res) => {
 };
 
 exports.SearchData = async (req, res) => {
-  const PAGE_SIZE = 10;
-const skip = 1;
-
-try {
+  const PAGE_SIZE = 5;
+  const skip = 1;
+  try {
     const { data } = req.body;
-
-    const original = data;
-
-const filter = original.normalize('NFD').replace(/[\u0300-\u036f]/g, '');  // Chuỗi không dấu 
-const regExp = new RegExp(filter, 'i');
     const list1 = await Doc.find({
-      $or: [
+      $$or: [
         {
-            title: regExp
+          title: new RegExp(req.params.q, "i"),
         },
         {
-            tag: regExp
-        }
-     ]
-    }).skip(skip).limit(PAGE_SIZE);
-    
-  
+          tag: new RegExp(req.params.q, "i"),
+        },
+      ],
+    })
+      .select("-date")
+      .select("-time")
+      .select("-isPrivate")
+      .select("-content")
+      .select("-creatorsId")
+      .select("-view")
+      .select("-like")
+      .select("-docs_URL")
+      .select("-creatorsPhoto")
+      .select("-userId")
+      .select("-category")
+      .skip(skip)
+      .limit(PAGE_SIZE);
 
     // const result = list1.concat(list2);
     return res.json(
-        jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", list1)
+      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", list1)
     );
-} catch (error) {
+  } catch (error) {
     return res.json(
-        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
     );
-}
-
+  }
 };
 
 /*
