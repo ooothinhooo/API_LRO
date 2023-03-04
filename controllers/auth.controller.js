@@ -165,45 +165,45 @@ exports.FindOneUser = async (req, res) => {
 };
 
 exports.UpdatePersonalInformation = async (req, res) => {
-  const _id = req.userId;
-  const { first_name, last_name, username, email, phone, avatar, isSex } =
-    req.body;
-  const data = { first_name, last_name, username, email, phone, avatar, isSex };
-  const userExist = await User.findOne({
-    $or: [
-      {
-        email: email,
-      },
-      {
-        username: username,
-      },
-      {
-        phone: phone,
-      },
-    ],
-  });
+ try {
+   const _id = req.userId;
+   const { first_name, last_name, email, phone, avatar, isSex } = req.body;
+   const data = { first_name, last_name, email, phone, avatar, isSex };
+   const UserInfo = await User.findById(_id);
+   let userExist = false;
+   if (UserInfo.email != email) {
+     userExist = await User.findOne({
+       $or: [
+         {
+           email: email,
+         },
+       ],
+     });
+   }
 
-  //!User or Email already exists
-  if (userExist) {
-    return res.json(
-      jsonGenerate(
-        StatusCode.UNPROCESSABLE_ENTITY,
-        "UserName or Email or Phone already exists"
-      )
-    );
-  }
-  try {
-    const result = await User.findByIdAndUpdate(_id, data);
-    return res.json(
-      jsonGenerate(
-        StatusCode.SUCCESS,
-        "Update Personal Information Successfully",
-        result
-      )
-    );
-  } catch (error) {
-    return res.status(500).json("Internal server error ");
-  }
+   //!User or Email already exists
+   if (userExist) {
+     return res.json(
+       jsonGenerate(
+         StatusCode.UNPROCESSABLE_ENTITY,
+         " Email  already exists",
+         UserInfo.email
+       )
+     );
+   }
+   try {
+     const result = await User.findByIdAndUpdate(_id, data);
+     return res.json(
+       jsonGenerate(
+         StatusCode.SUCCESS,
+         "Update Personal Information Successfully",
+         result
+       )
+     );
+   } catch (error) {
+     return res.status(500).json("Internal server error ");
+   }
+ } catch (error) {}
 };
 
 exports.ChangeThePassword = async (req, res) => {
