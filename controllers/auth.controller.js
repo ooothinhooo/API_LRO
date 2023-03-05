@@ -223,77 +223,70 @@ exports.ChangeThePassword = async (req, res) => {
   }
 };
 
-exports.SearchData = async (req, res) => {
-  const PAGE_SIZE = 5;
-  const skip = 1;
-  try {
-    const { data } = req.body;
-    const list1 = await Doc.find({
-      $$or: [
-        {
-          title: new RegExp(req.params.q, "i"),
-        },
-        {
-          tag: new RegExp(req.params.q, "i"),
-        },
-      ],
-    })
-      .select("-date")
-      .select("-time")
-      .select("-isPrivate")
-      .select("-content")
-      .select("-creatorsId")
-      .select("-view")
-      .select("-like")
-      .select("-docs_URL")
-      .select("-creatorsPhoto")
-      .select("-userId")
-      .select("-category")
-      .skip(skip)
-      .limit(PAGE_SIZE);
+// exports.SearchData = async (req, res) => {
+//   const PAGE_SIZE = 10;
+//   const skip = 1;
+//   try {
+//     const { data } = req.body;
+//     const list1 = await Doc.find({
+//       $or: [
+//         {
+//           title: new RegExp(req.params.q, "i"),
+//         },
+//         {
+//           tag: new RegExp(req.params.q, "i"),
+//         },
+//       ],
+//     })
+//       .skip(skip)
+//       .limit(PAGE_SIZE);
 
-    // const result = list1.concat(list2);
-    return res.json(
-      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", list1)
-    );
-  } catch (error) {
-    return res.json(
-      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
-    );
-  }
-};
+//     const list2 = await Art.find({
+//       $or: [
+//         {
+//           title: new RegExp(req.params.q, "i"),
+//         },
+//         {
+//           tag: new RegExp(req.params.q, "i"),
+//         },
+//       ],
+//     })
+//       .skip(skip)
+//       .limit(PAGE_SIZE);
 
-/*
+//     const result = list1.concat(list2);
+//     return res.json(
+//       jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", result)
+//     );
+//   } catch (error) {
+//     return res.json(
+//       jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+//     );
+//   }
+// };
+
+
 
 exports.SearchData = async (req, res) => {
   const PAGE_SIZE = 10;
   const skip = 1;
   try {
-    const { data } = req.body;
+
     const list1 = await Doc.find({
       $or: [
-        {
-          title: data,
-        },
-        {
-          tag: data,
-        },
-      ],
-    }).limit(PAGE_SIZE);
+          { title: new RegExp(req.params.q, 'i') },
+          { tag: new RegExp(req.params.q, 'i') },
+      ]
+    });
     const list2 = await Art.find({
       $or: [
-        {
-          title: data,
-        },
-        {
-          tag: data,
-        },
-      ],
-    }).limit(PAGE_SIZE);
+          { title: new RegExp(req.params.q, 'i') },
+          { tag: new RegExp(req.params.q, 'i') },
+      ]})
 
-    const result = list1.concat(list2);
+    const results = list1.concat(list2);
     return res.json(
-      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", result)
+      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", results )
     );
   } catch (error) {
     return res.json(
@@ -301,4 +294,3 @@ exports.SearchData = async (req, res) => {
     );
   }
 };
-*/

@@ -146,17 +146,35 @@ exports.CountViewDoc = async (req, res) => {
 //* Get All HIGHLIGHTS ARTICLE
 //! hiện thị tất cả HIGHLIGHTS ARTICLE không cần auth
 exports.HighLightDoc = async (req, res) => {
+  const PAGE_SIZE = 12;
   try {
-    var SIZE = req.query.s;
-    const doc = await Docs.find();
-    const arr = doc.sort(function (a, b) {
-      if (a.view > b.view) return -1;
-      return 1;
-    });
-    const data = arr.slice(0, SIZE);
-    res.status(200).send({ data: data });
+    var page = req.query.page;
+    if (page) {
+      page = parseInt(page);
+      if (page < 1) page = 1;
+      var skip = (page - 1) * PAGE_SIZE;
+      Docs.find({
+        $and: [
+          {
+            isPrivate: false,
+          },
+        ],
+      })
+        .sort({ views: 1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .then((data) => {
+          res.json(data);
+        });
+    } else {
+      return res.json(
+        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
+      );
+    }
   } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" });
+    return res.json(
+      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+    );
   }
 };
 
@@ -185,7 +203,13 @@ exports.PaginationDoc = async (req, res) => {
       page = parseInt(page);
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      Docs.find({})
+      Docs.find({
+        $and: [
+          {
+            isPrivate: false,
+          },
+        ],
+      })
         .skip(skip)
         .limit(PAGE_SIZE)
         .then((data) => {
@@ -260,8 +284,6 @@ exports.ViewDocsList = async (req, res) => {
         .select("-password")
         .select("-form")
         .select("-uid")
-        .select("-posts")
-        .select("-blog")
         .exec();
       const count = infoCreators.docs.length;
       const id = infoCreators._id;
