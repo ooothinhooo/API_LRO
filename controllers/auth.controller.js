@@ -268,29 +268,25 @@ exports.ChangeThePassword = async (req, res) => {
 
 
 exports.SearchData = async (req, res) => {
-  const PAGE_SIZE = 10;
-  const skip = 1;
-  try {
+    const PAGE_SIZE = 10;
+    const skip = 1;
+    var needle = req.params.q;
+    try {
+      const reDoc = await Doc.find({
+        sku: { $regex: new RegExp(`${needle}$`) },
+      });
+      const reArt = await Art.find({
+        sku: { $regex: new RegExp(`${needle}$`) },
+      });
+      // var result = { ...reDoc, ...reArt };
+      const result = reDoc.concat(reArt);
 
-    const list1 = await Doc.find({
-      $or: [
-          { title: new RegExp(req.params.q, 'i') },
-          { tag: new RegExp(req.params.q, 'i') },
-      ]
-    });
-    const list2 = await Art.find({
-      $or: [
-          { title: new RegExp(req.params.q, 'i') },
-          { tag: new RegExp(req.params.q, 'i') },
-      ]})
-
-    const results = list1.concat(list2);
-    return res.json(
-      jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", results )
-    );
-  } catch (error) {
-    return res.json(
-      jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
-    );
-  }
+      return res.json(
+        jsonGenerate(StatusCode.SUCCESS, "Data Succssfully", result)
+      );
+    } catch (error) {
+      return res.json(
+        jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Error", error)
+      );
+    }
 };
