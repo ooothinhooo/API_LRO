@@ -160,7 +160,7 @@ exports.HighLightDoc = async (req, res) => {
           },
         ],
       })
-        .sort({ views: 1 })
+        .sort({ view: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
         .then((data) => {
