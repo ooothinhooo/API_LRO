@@ -200,6 +200,7 @@ exports.PaginationDoc = async (req, res) => {
   try {
     var page = req.query.page;
     var cate = req.query.cate || "";
+    
     if (page) {
       page = parseInt(page);
       if (page < 1) page = 1;

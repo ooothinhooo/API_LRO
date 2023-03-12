@@ -4,7 +4,7 @@ const Jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
 const Art = require("../models/arts.models.js");
 const Doc = require("../models/docs.models.js");
-const Dis = require("../models/disscussion.models.js");
+
 const { StatusCode } = require("../utils/constants.js");
 const { jsonGenerate } = require("../utils/helpers.js");
 
