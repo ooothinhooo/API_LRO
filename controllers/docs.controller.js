@@ -199,22 +199,41 @@ exports.PaginationDoc = async (req, res) => {
   const PAGE_SIZE = 12;
   try {
     var page = req.query.page;
+    var cate = req.query.cate || "";
     if (page) {
       page = parseInt(page);
       if (page < 1) page = 1;
       var skip = (page - 1) * PAGE_SIZE;
-      Docs.find({
-        $and: [
-          {
-            isPrivate: false,
-          },
-        ],
-      })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .then((data) => {
-          res.json(data);
-        });
+      if (cate) {
+        Docs.find({
+          $and: [
+            {
+              isPrivate: false,
+            },
+            {
+              category: cate,
+            },
+          ],
+        })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .then((data) => {
+            res.json(data);
+          });
+      } else {
+        Docs.find({
+          $and: [
+            {
+              isPrivate: false,
+            },
+          ],
+        })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .then((data) => {
+            res.json(data);
+          });
+      }
     } else {
       return res.json(
         jsonGenerate(StatusCode.UNPROCESSABLE_ENTITY, "Lỗi Truy Vấn", error)
